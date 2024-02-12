@@ -1,6 +1,6 @@
-subject_id,name,professor_id
-1,Arts development officer,5
-2,Pathologist,2
-3,General practice doctor,3
-4,Medical technical officer,1
-5,Haematologist,4
+subject_id,name,lector_id
+1,Cartographer,4
+2,"Engineer, aeronautical",3
+3,Further education lecturer,1
+4,Lobbyist,1
+5,"Investment banker, operational",4

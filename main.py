@@ -24,16 +24,16 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS Groups (
                     name TEXT
                 )''')
 
-cursor.execute('''CREATE TABLE IF NOT EXISTS Professors (
-                    professor_id INTEGER PRIMARY KEY,
+cursor.execute('''CREATE TABLE IF NOT EXISTS Lectors (
+                    lector_id INTEGER PRIMARY KEY,
                     name TEXT
                 )''')
 
 cursor.execute('''CREATE TABLE IF NOT EXISTS Subjects (
                     subject_id INTEGER PRIMARY KEY,
                     name TEXT,
-                    professor_id INTEGER,
-                    FOREIGN KEY (professor_id) REFERENCES Professors(professor_id)
+                    lector_id INTEGER,
+                    FOREIGN KEY (lector_id) REFERENCES Lectors(lector_id)
                 )''')
 
 cursor.execute('''CREATE TABLE IF NOT EXISTS Grades (
@@ -47,53 +47,47 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS Grades (
                 )''')
 
 conn.commit()
-
-# Очищення таблиць перед заповненням новими даними
-tables = ['Students', 'Groups', 'Professors', 'Subjects', 'Grades']
+tables = ['Students', 'Groups', 'Lectors', 'Subjects', 'Grades']
 for table in tables:
     cursor.execute(f"DELETE FROM {table}")
 conn.commit()
 
-# Створення груп
-for _ in range(3):
-    group_name = 'Group ' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+
+for _ in range(3): # Створення груп
+    group_name = 'Group ' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=2))
     cursor.execute("INSERT INTO Groups (name) VALUES (?)", (group_name,))
 conn.commit()
 
-# Створення викладачів
-for _ in range(5):
-    cursor.execute("INSERT INTO Professors (name) VALUES (?)", (fake.name(),))
+for _ in range(5): # Створення викладачів
+    cursor.execute("INSERT INTO Lectors (name) VALUES (?)", (fake.name(),))
 conn.commit()
 
-# Створення предметів та їх призначення викладачам
-for _ in range(5):
+for _ in range(5): # Створення предметів 
     subject_name = fake.job()
-    professor_id = random.randint(1, 5)
-    cursor.execute("INSERT INTO Subjects (name, professor_id) VALUES (?, ?)", (subject_name, professor_id))
+    lector_id = random.randint(1, 5)
+    cursor.execute("INSERT INTO Subjects (name, lector_id) VALUES (?, ?)", (subject_name, lector_id))
 conn.commit()
 
-# Створення студентів та їх призначення до груп
-for group_id in range(1, 4):
+for group_id in range(1, 4): # Створення студентів груп
     for _ in range(30):
         name = fake.name()
         cursor.execute("INSERT INTO Students (name, group_id) VALUES (?, ?)", (name, group_id))
 conn.commit()
 
-# Створення оцінок для студентів
-students_ids = list(range(1, 91))  # 30 студентів у кожній групі
-subjects_ids = list(range(1, 6))
-for student_id in students_ids:
+# Створення оцінок для студентів, починаючи з 1 вересня 2023 року
+start_date = datetime.date(2023, 9, 1)
+students_ids = list(range(1, 91))  #Створення оцінок для студентів, по 30 студентів у кожній групі 3*30
+subjects_ids = list(range(1, 6))   # 5 предметів
+for student_id in students_ids: 
     for subject_id in subjects_ids:
         for _ in range(20):
             grade = random.randint(60, 100)
-            date_received = fake.date_time_this_year(before_now=True, after_now=False)
-            date_received = date_received.date()  # Отримання лише дати без часу
+            date_received = fake.date_between(start_date=start_date, end_date='today')
             cursor.execute("INSERT INTO Grades (student_id, subject_id, grade, date_received) VALUES (?, ?, ?, ?)",
                            (student_id, subject_id, grade, date_received))
 conn.commit()
 
-# Експорт таблиць до CSV
-def export_to_csv(table_name):
+def export_to_csv(table_name): # Експорт таблиць до CSV
     cursor.execute(f"SELECT * FROM {table_name}")
     with open(f'{table_name}.csv', 'w', newline='', encoding='utf-8') as csvfile:
         csv_writer = csv.writer(csvfile)
