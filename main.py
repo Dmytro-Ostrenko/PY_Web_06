@@ -91,21 +91,23 @@ for group_id in range(1, group+1): # Створення студентів гр�
         cursor.execute("INSERT INTO Students (name, group_id) VALUES (?, ?)", (name, group_id))
 conn.commit()
 
-# Створення оцінок для студентів, починаючи з 1 вересня 2023 року
+# Створення оцінок для студентів
 start_date = datetime.date(2023, 9, 1)  # Початкова дата
-students_ids = list(range(1, student*group+1))  #Створення оцінок для студентів, по 30 студентів у кожній групі 3*30
-subjects_ids = list(range(1, sub))   
-# Створення оцінок для кожного студента
-for student_id in students_ids:
-    # Випадковим чином вибираємо 20 оцінок для кожного студента
-    for _ in range(quantity_grade):
-        subject_id = random.choice(subjects_ids)  # Випадковим чином вибираємо предмет
-        grade = random.randint(min_grade, max_grade)  # Генеруємо випадкову оцінку
-        date_received = fake.date_between(start_date=start_date, end_date='today')  # Генеруємо випадкову дату
+students_ids = list(range(1, student*group+1))  #Створення оцінок для студентів
+subjects_ids = list(range(1, sub+1))   
+for student_id in range(1, student * group + 1):
+    # Випадкова кількість оцінок для кожного студента (від 5 до 20)
+    num_grades = random.randint(5, 20)
+    for _ in range(num_grades):
+        subject_id = random.randint(1, sub)  # Випадковий предмет
+        grade = random.randint(min_grade, max_grade)  # Випадкова оцінка
+        date_received = fake.date_between(start_date=start_date, end_date='today')  # Випадкова дата
         cursor.execute("INSERT INTO Grades (student_id, subject_id, grade, date_received) VALUES (?, ?, ?, ?)",
                        (student_id, subject_id, grade, date_received))
 
 conn.commit()
+
+
 
 
 
