@@ -11,6 +11,14 @@ cursor = conn.cursor()
 
 fake = Faker()
 
+sub=5 #кількість предметів
+group=3#кількість груп
+student=50#кількість студентів груп
+min_grade=60
+max_grade=100
+quantity_grade=20
+quantity_lector=5
+
 # Створення схеми бази даних
 cursor.execute('''CREATE TABLE IF NOT EXISTS Students (
                     student_id INTEGER PRIMARY KEY,
@@ -53,7 +61,7 @@ for table in tables:
 conn.commit()
 
 
-for _ in range(3): # Створення груп
+for _ in range(group): # Створення груп
     group_name = 'Group ' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=2))
     cursor.execute("INSERT INTO Groups (name) VALUES (?)", (group_name,))
 conn.commit()
@@ -62,30 +70,44 @@ for _ in range(5): # Створення викладачів
     cursor.execute("INSERT INTO Lectors (name) VALUES (?)", (fake.name(),))
 conn.commit()
 
-for _ in range(5): # Створення предметів 
+
+# Створення випадкового порядку лекторів та предметів
+random_lectors = list(range(1, quantity_lector + 1))
+random.shuffle(random_lectors)
+random_subjects = list(range(1, sub + 1))
+random.shuffle(random_subjects)
+
+# Створення предметів для кожного викладача
+for lector_id in random_lectors:
+    subject_id = random_subjects.pop(0)  # Вибираємо перший предмет із перемішаного списку
     subject_name = fake.job()
-    lector_id = random.randint(1, 5)
     cursor.execute("INSERT INTO Subjects (name, lector_id) VALUES (?, ?)", (subject_name, lector_id))
 conn.commit()
 
-for group_id in range(1, 4): # Створення студентів груп
-    for _ in range(30):
+
+for group_id in range(1, group+1): # Створення студентів груп
+    for _ in range(student):
         name = fake.name()
         cursor.execute("INSERT INTO Students (name, group_id) VALUES (?, ?)", (name, group_id))
 conn.commit()
 
 # Створення оцінок для студентів, починаючи з 1 вересня 2023 року
-start_date = datetime.date(2023, 9, 1)
-students_ids = list(range(1, 91))  #Створення оцінок для студентів, по 30 студентів у кожній групі 3*30
-subjects_ids = list(range(1, 6))   # 5 предметів
-for student_id in students_ids: 
-    for subject_id in subjects_ids:
-        for _ in range(20):
-            grade = random.randint(60, 100)
-            date_received = fake.date_between(start_date=start_date, end_date='today')
-            cursor.execute("INSERT INTO Grades (student_id, subject_id, grade, date_received) VALUES (?, ?, ?, ?)",
-                           (student_id, subject_id, grade, date_received))
+start_date = datetime.date(2023, 9, 1)  # Початкова дата
+students_ids = list(range(1, student*group+1))  #Створення оцінок для студентів, по 30 студентів у кожній групі 3*30
+subjects_ids = list(range(1, sub))   
+# Створення оцінок для кожного студента
+for student_id in students_ids:
+    # Випадковим чином вибираємо 20 оцінок для кожного студента
+    for _ in range(quantity_grade):
+        subject_id = random.choice(subjects_ids)  # Випадковим чином вибираємо предмет
+        grade = random.randint(min_grade, max_grade)  # Генеруємо випадкову оцінку
+        date_received = fake.date_between(start_date=start_date, end_date='today')  # Генеруємо випадкову дату
+        cursor.execute("INSERT INTO Grades (student_id, subject_id, grade, date_received) VALUES (?, ?, ?, ?)",
+                       (student_id, subject_id, grade, date_received))
+
 conn.commit()
+
+
 
 def export_to_csv(table_name): # Експорт таблиць до CSV
     cursor.execute(f"SELECT * FROM {table_name}")
